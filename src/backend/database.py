@@ -34,6 +34,7 @@ def init_database():
 initial_activities = {
     "Chess Club": {
         "description": "Learn strategies and compete in chess tournaments",
+        "difficulty": "beginner",
         "schedule": "Mondays and Fridays, 3:15 PM - 4:45 PM",
         "schedule_details": {
             "days": ["Monday", "Friday"],
@@ -45,6 +46,7 @@ initial_activities = {
     },
     "Programming Class": {
         "description": "Learn programming fundamentals and build software projects",
+        "difficulty": "beginner",
         "schedule": "Tuesdays and Thursdays, 7:00 AM - 8:00 AM",
         "schedule_details": {
             "days": ["Tuesday", "Thursday"],
@@ -67,6 +69,7 @@ initial_activities = {
     },
     "Soccer Team": {
         "description": "Join the school soccer team and compete in matches",
+        "difficulty": "intermediate",
         "schedule": "Tuesdays and Thursdays, 3:30 PM - 5:30 PM",
         "schedule_details": {
             "days": ["Tuesday", "Thursday"],
@@ -78,6 +81,7 @@ initial_activities = {
     },
     "Basketball Team": {
         "description": "Practice and compete in basketball tournaments",
+        "difficulty": "intermediate",
         "schedule": "Wednesdays and Fridays, 3:15 PM - 5:00 PM",
         "schedule_details": {
             "days": ["Wednesday", "Friday"],
@@ -161,6 +165,7 @@ initial_activities = {
     },
     "Sunday Chess Tournament": {
         "description": "Weekly tournament for serious chess players with rankings",
+        "difficulty": "advanced",
         "schedule": "Sundays, 2:00 PM - 5:00 PM",
         "schedule_details": {
             "days": ["Sunday"],

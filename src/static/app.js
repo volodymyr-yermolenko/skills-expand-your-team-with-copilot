@@ -566,7 +566,6 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="share-buttons">
           <button
             class="share-button share-twitter"
-            data-activity="${name}"
             aria-label="Share on X (Twitter)"
             title="Share on X (Twitter)"
           >
@@ -574,7 +573,6 @@ document.addEventListener("DOMContentLoaded", () => {
           </button>
           <button
             class="share-button share-facebook"
-            data-activity="${name}"
             aria-label="Share on Facebook"
             title="Share on Facebook"
           >
@@ -582,7 +580,6 @@ document.addEventListener("DOMContentLoaded", () => {
           </button>
           <button
             class="share-button share-email"
-            data-activity="${name}"
             aria-label="Share by email"
             title="Share by email"
           >
@@ -590,7 +587,6 @@ document.addEventListener("DOMContentLoaded", () => {
           </button>
           <button
             class="share-button share-copy-link"
-            data-activity="${name}"
             aria-label="Copy link to this activity"
             title="Copy link"
           >

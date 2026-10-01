@@ -473,10 +473,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // If the page was opened from a shared link, scroll to and highlight
-    // the activity it points to (only on the very first render)
+    // the activity it points to (only once, and only once the card is
+    // actually present, e.g. not hidden by the default filters)
     if (!hasHighlightedSharedActivity) {
-      hasHighlightedSharedActivity = true;
-      highlightSharedActivity();
+      hasHighlightedSharedActivity = highlightSharedActivity();
     }
   }
 
@@ -664,11 +664,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // If the current URL points to a specific shared activity (e.g.
-  // "#activity=Chess%20Club"), scroll to its card and highlight it briefly
+  // "#activity=Chess%20Club"), scroll to its card and highlight it briefly.
+  // Returns true once there is nothing left to do (no shared link, or the
+  // card was found and highlighted), and false if the card isn't rendered
+  // yet (e.g. hidden by the current filters) so the caller can retry later.
   function highlightSharedActivity() {
     const hashMatch = window.location.hash.match(/^#activity=(.+)$/);
     if (!hashMatch) {
-      return;
+      return true;
     }
 
     const sharedActivityName = decodeURIComponent(hashMatch[1]);
@@ -677,7 +680,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ).find((card) => card.dataset.activityName === sharedActivityName);
 
     if (!sharedCard) {
-      return;
+      return false;
     }
 
     sharedCard.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -685,6 +688,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => {
       sharedCard.classList.remove("activity-card-highlighted");
     }, 3000);
+    return true;
   }
 
   function shareOnTwitter(name, details) {

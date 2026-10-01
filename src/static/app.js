@@ -36,7 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // State for activities and filters
   let allActivities = {};
-  let hasHighlightedSharedActivity = false;
+  let sharedActivityHighlightResolved = false;
   let currentFilter = "all";
   let searchQuery = "";
   let currentDay = "";
@@ -475,8 +475,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // If the page was opened from a shared link, scroll to and highlight
     // the activity it points to (only once, and only once the card is
     // actually present, e.g. not hidden by the default filters)
-    if (!hasHighlightedSharedActivity) {
-      hasHighlightedSharedActivity = highlightSharedActivity();
+    if (!sharedActivityHighlightResolved) {
+      sharedActivityHighlightResolved = highlightSharedActivity();
     }
   }
 
@@ -731,8 +731,11 @@ document.addEventListener("DOMContentLoaded", () => {
         tempInput.value = shareUrl;
         document.body.appendChild(tempInput);
         tempInput.select();
-        document.execCommand("copy");
+        const copied = document.execCommand("copy");
         document.body.removeChild(tempInput);
+        if (!copied) {
+          throw new Error("execCommand('copy') was unsuccessful");
+        }
       }
       showMessage("Link copied to clipboard!", "success");
     } catch (error) {

@@ -36,6 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // State for activities and filters
   let allActivities = {};
+  let sharedActivityHighlightResolved = false;
   let currentFilter = "all";
   let searchQuery = "";
   let currentDay = "";
@@ -470,12 +471,20 @@ document.addEventListener("DOMContentLoaded", () => {
     Object.entries(filteredActivities).forEach(([name, details]) => {
       renderActivityCard(name, details);
     });
+
+    // If the page was opened from a shared link, scroll to and highlight
+    // the activity it points to (only once, and only once the card is
+    // actually present, e.g. not hidden by the default filters)
+    if (!sharedActivityHighlightResolved) {
+      sharedActivityHighlightResolved = highlightSharedActivity();
+    }
   }
 
   // Function to render a single activity card
   function renderActivityCard(name, details) {
     const activityCard = document.createElement("div");
     activityCard.className = "activity-card";
+    activityCard.dataset.activityName = name;
 
     // Calculate spots and capacity
     const totalSpots = details.max_participants;
@@ -552,6 +561,39 @@ document.addEventListener("DOMContentLoaded", () => {
             .join("")}
         </ul>
       </div>
+      <div class="share-container">
+        <span class="share-label">Share:</span>
+        <div class="share-buttons">
+          <button
+            class="share-button share-twitter"
+            aria-label="Share on X (Twitter)"
+            title="Share on X (Twitter)"
+          >
+            𝕏
+          </button>
+          <button
+            class="share-button share-facebook"
+            aria-label="Share on Facebook"
+            title="Share on Facebook"
+          >
+            f
+          </button>
+          <button
+            class="share-button share-email"
+            aria-label="Share by email"
+            title="Share by email"
+          >
+            ✉️
+          </button>
+          <button
+            class="share-button share-copy-link"
+            aria-label="Copy link to this activity"
+            title="Copy link"
+          >
+            🔗
+          </button>
+        </div>
+      </div>
       <div class="activity-card-actions">
         ${
           currentUser
@@ -587,7 +629,119 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
+    // Add click handlers for share buttons
+    activityCard
+      .querySelector(".share-twitter")
+      .addEventListener("click", () => shareOnTwitter(name, details));
+    activityCard
+      .querySelector(".share-facebook")
+      .addEventListener("click", () => shareOnFacebook(name));
+    activityCard
+      .querySelector(".share-email")
+      .addEventListener("click", () => shareByEmail(name, details));
+    activityCard
+      .querySelector(".share-copy-link")
+      .addEventListener("click", () => copyActivityLink(name));
+
     activitiesList.appendChild(activityCard);
+  }
+
+  // Build a shareable URL that points back to this activity
+  function getActivityShareUrl(name) {
+    const url = new URL(window.location.href);
+    url.hash = `activity=${encodeURIComponent(name)}`;
+    return url.toString();
+  }
+
+  // Build the friendly share message used across platforms
+  function getShareText(name, details) {
+    return `Check out "${name}" at Mergington High School! ${details.description}`;
+  }
+
+  // Open a share link in a small popup window
+  function openSharePopup(url) {
+    window.open(url, "_blank", "noopener,noreferrer,width=600,height=500");
+  }
+
+  // If the current URL points to a specific shared activity (e.g.
+  // "#activity=Chess%20Club"), scroll to its card and highlight it briefly.
+  // Returns true once there is nothing left to do (no shared link, or the
+  // card was found and highlighted), and false if the card isn't rendered
+  // yet (e.g. hidden by the current filters) so the caller can retry later.
+  function highlightSharedActivity() {
+    const hashMatch = window.location.hash.match(/^#activity=(.+)$/);
+    if (!hashMatch) {
+      return true;
+    }
+
+    const sharedActivityName = decodeURIComponent(hashMatch[1]);
+    const sharedCard = Array.from(
+      activitiesList.querySelectorAll(".activity-card")
+    ).find((card) => card.dataset.activityName === sharedActivityName);
+
+    if (!sharedCard) {
+      return false;
+    }
+
+    sharedCard.scrollIntoView({ behavior: "smooth", block: "center" });
+    sharedCard.classList.add("activity-card-highlighted");
+    setTimeout(() => {
+      sharedCard.classList.remove("activity-card-highlighted");
+    }, 3000);
+    return true;
+  }
+
+  function shareOnTwitter(name, details) {
+    const shareUrl = getActivityShareUrl(name);
+    const text = getShareText(name, details);
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+      text
+    )}&url=${encodeURIComponent(shareUrl)}`;
+    openSharePopup(twitterUrl);
+  }
+
+  function shareOnFacebook(name) {
+    const shareUrl = getActivityShareUrl(name);
+    const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+      shareUrl
+    )}`;
+    openSharePopup(facebookUrl);
+  }
+
+  function shareByEmail(name, details) {
+    const shareUrl = getActivityShareUrl(name);
+    const subject = `Join me for ${name} at Mergington High School`;
+    const body = `${getShareText(name, details)}\n\n${shareUrl}`;
+    window.location.href = `mailto:?subject=${encodeURIComponent(
+      subject
+    )}&body=${encodeURIComponent(body)}`;
+  }
+
+  async function copyActivityLink(name) {
+    const shareUrl = getActivityShareUrl(name);
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+      } else {
+        // Fallback for older browsers without the Clipboard API (or pages
+        // not served over HTTPS, where the Clipboard API is unavailable).
+        // document.execCommand is deprecated but kept here only as a
+        // best-effort fallback; modern browsers hit the branch above.
+        const tempInput = document.createElement("input");
+        tempInput.value = shareUrl;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        const copied = document.execCommand("copy");
+        document.body.removeChild(tempInput);
+        if (!copied) {
+          throw new Error("execCommand('copy') was unsuccessful");
+        }
+      }
+      showMessage("Link copied to clipboard!", "success");
+    } catch (error) {
+      console.error("Error copying link:", error);
+      showMessage("Could not copy link. Please try again.", "error");
+    }
   }
 
   // Event listeners for search and filter

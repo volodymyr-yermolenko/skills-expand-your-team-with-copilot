@@ -552,6 +552,43 @@ document.addEventListener("DOMContentLoaded", () => {
             .join("")}
         </ul>
       </div>
+      <div class="share-container">
+        <span class="share-label">Share:</span>
+        <div class="share-buttons">
+          <button
+            class="share-button share-twitter"
+            data-activity="${name}"
+            aria-label="Share on X (Twitter)"
+            title="Share on X (Twitter)"
+          >
+            𝕏
+          </button>
+          <button
+            class="share-button share-facebook"
+            data-activity="${name}"
+            aria-label="Share on Facebook"
+            title="Share on Facebook"
+          >
+            f
+          </button>
+          <button
+            class="share-button share-email"
+            data-activity="${name}"
+            aria-label="Share by email"
+            title="Share by email"
+          >
+            ✉️
+          </button>
+          <button
+            class="share-button share-copy-link"
+            data-activity="${name}"
+            aria-label="Copy link to this activity"
+            title="Copy link"
+          >
+            🔗
+          </button>
+        </div>
+      </div>
       <div class="activity-card-actions">
         ${
           currentUser
@@ -587,7 +624,85 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
+    // Add click handlers for share buttons
+    activityCard
+      .querySelector(".share-twitter")
+      .addEventListener("click", () => shareOnTwitter(name, details));
+    activityCard
+      .querySelector(".share-facebook")
+      .addEventListener("click", () => shareOnFacebook(name, details));
+    activityCard
+      .querySelector(".share-email")
+      .addEventListener("click", () => shareByEmail(name, details));
+    activityCard
+      .querySelector(".share-copy-link")
+      .addEventListener("click", () => copyActivityLink(name));
+
     activitiesList.appendChild(activityCard);
+  }
+
+  // Build a shareable URL that points back to this activity
+  function getActivityShareUrl(name) {
+    const url = new URL(window.location.href);
+    url.hash = `activity=${encodeURIComponent(name)}`;
+    return url.toString();
+  }
+
+  // Build the friendly share message used across platforms
+  function getShareText(name, details) {
+    return `Check out "${name}" at Mergington High School! ${details.description}`;
+  }
+
+  // Open a share link in a small popup window
+  function openSharePopup(url) {
+    window.open(url, "_blank", "noopener,noreferrer,width=600,height=500");
+  }
+
+  function shareOnTwitter(name, details) {
+    const shareUrl = getActivityShareUrl(name);
+    const text = getShareText(name, details);
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+      text
+    )}&url=${encodeURIComponent(shareUrl)}`;
+    openSharePopup(twitterUrl);
+  }
+
+  function shareOnFacebook(name) {
+    const shareUrl = getActivityShareUrl(name);
+    const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+      shareUrl
+    )}`;
+    openSharePopup(facebookUrl);
+  }
+
+  function shareByEmail(name, details) {
+    const shareUrl = getActivityShareUrl(name);
+    const subject = `Join me for ${name} at Mergington High School`;
+    const body = `${getShareText(name, details)}\n\n${shareUrl}`;
+    window.location.href = `mailto:?subject=${encodeURIComponent(
+      subject
+    )}&body=${encodeURIComponent(body)}`;
+  }
+
+  async function copyActivityLink(name) {
+    const shareUrl = getActivityShareUrl(name);
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+      } else {
+        // Fallback for browsers without the Clipboard API
+        const tempInput = document.createElement("input");
+        tempInput.value = shareUrl;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand("copy");
+        document.body.removeChild(tempInput);
+      }
+      showMessage("Link copied to clipboard!", "success");
+    } catch (error) {
+      console.error("Error copying link:", error);
+      showMessage("Could not copy link. Please try again.", "error");
+    }
   }
 
   // Event listeners for search and filter

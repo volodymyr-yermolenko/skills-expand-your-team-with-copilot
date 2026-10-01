@@ -635,7 +635,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .addEventListener("click", () => shareOnTwitter(name, details));
     activityCard
       .querySelector(".share-facebook")
-      .addEventListener("click", () => shareOnFacebook(name, details));
+      .addEventListener("click", () => shareOnFacebook(name));
     activityCard
       .querySelector(".share-email")
       .addEventListener("click", () => shareByEmail(name, details));
@@ -700,7 +700,7 @@ document.addEventListener("DOMContentLoaded", () => {
     openSharePopup(twitterUrl);
   }
 
-  function shareOnFacebook(name, details) {
+  function shareOnFacebook(name) {
     const shareUrl = getActivityShareUrl(name);
     const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
       shareUrl
@@ -723,7 +723,10 @@ document.addEventListener("DOMContentLoaded", () => {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(shareUrl);
       } else {
-        // Fallback for browsers without the Clipboard API
+        // Fallback for older browsers without the Clipboard API (or pages
+        // not served over HTTPS, where the Clipboard API is unavailable).
+        // document.execCommand is deprecated but kept here only as a
+        // best-effort fallback; modern browsers hit the branch above.
         const tempInput = document.createElement("input");
         tempInput.value = shareUrl;
         document.body.appendChild(tempInput);

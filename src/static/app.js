@@ -36,6 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // State for activities and filters
   let allActivities = {};
+  let hasHighlightedSharedActivity = false;
   let currentFilter = "all";
   let searchQuery = "";
   let currentDay = "";
@@ -470,12 +471,20 @@ document.addEventListener("DOMContentLoaded", () => {
     Object.entries(filteredActivities).forEach(([name, details]) => {
       renderActivityCard(name, details);
     });
+
+    // If the page was opened from a shared link, scroll to and highlight
+    // the activity it points to (only on the very first render)
+    if (!hasHighlightedSharedActivity) {
+      hasHighlightedSharedActivity = true;
+      highlightSharedActivity();
+    }
   }
 
   // Function to render a single activity card
   function renderActivityCard(name, details) {
     const activityCard = document.createElement("div");
     activityCard.className = "activity-card";
+    activityCard.dataset.activityName = name;
 
     // Calculate spots and capacity
     const totalSpots = details.max_participants;
@@ -658,6 +667,30 @@ document.addEventListener("DOMContentLoaded", () => {
     window.open(url, "_blank", "noopener,noreferrer,width=600,height=500");
   }
 
+  // If the current URL points to a specific shared activity (e.g.
+  // "#activity=Chess%20Club"), scroll to its card and highlight it briefly
+  function highlightSharedActivity() {
+    const hashMatch = window.location.hash.match(/^#activity=(.+)$/);
+    if (!hashMatch) {
+      return;
+    }
+
+    const sharedActivityName = decodeURIComponent(hashMatch[1]);
+    const sharedCard = Array.from(
+      activitiesList.querySelectorAll(".activity-card")
+    ).find((card) => card.dataset.activityName === sharedActivityName);
+
+    if (!sharedCard) {
+      return;
+    }
+
+    sharedCard.scrollIntoView({ behavior: "smooth", block: "center" });
+    sharedCard.classList.add("activity-card-highlighted");
+    setTimeout(() => {
+      sharedCard.classList.remove("activity-card-highlighted");
+    }, 3000);
+  }
+
   function shareOnTwitter(name, details) {
     const shareUrl = getActivityShareUrl(name);
     const text = getShareText(name, details);
@@ -667,7 +700,7 @@ document.addEventListener("DOMContentLoaded", () => {
     openSharePopup(twitterUrl);
   }
 
-  function shareOnFacebook(name) {
+  function shareOnFacebook(name, details) {
     const shareUrl = getActivityShareUrl(name);
     const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
       shareUrl

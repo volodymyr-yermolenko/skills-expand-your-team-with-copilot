@@ -169,6 +169,12 @@ section h3 {
   border-color: var(--border-focus);
 }
 
+/* Temporary highlight when arriving from a shared link */
+.activity-card-highlighted {
+  border-color: var(--secondary);
+  box-shadow: 0 0 0 3px var(--secondary);
+}
+
 .activity-card h4 {
   margin-bottom: 8px;
   color: var(--primary);
